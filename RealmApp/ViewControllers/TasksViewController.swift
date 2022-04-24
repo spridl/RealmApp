@@ -15,6 +15,7 @@ class TasksViewController: UITableViewController {
     
     private var currentTasks: Results<Task>!
     private var completedTasks: Results<Task>!
+    private let storageManager = StorageManager.shared
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,13 +63,13 @@ class TasksViewController: UITableViewController {
         let task = indexPath.section == 0 ? self.currentTasks[indexPath.row] : self.completedTasks[indexPath.row]
         
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
-            StorageManager.shared.delete(task)
+            self.storageManager.delete(task)
             tableView.deleteRows(at: [indexPath], with: .automatic)
         }
         let title = indexPath.section == 0 ? "Done" : "Undone"
         let doneAction = UIContextualAction(style: .normal, title: title) { _, _, isDone in
             
-            StorageManager.shared.done(task)
+            self.storageManager.done(task)
             
             if indexPath.section == 0 {
                 let rowIndex = IndexPath(row: self.completedTasks.index(of: task) ?? 0, section: 1)
@@ -105,7 +106,8 @@ extension TasksViewController {
         let alert = UIAlertController.createAlert(withTitle: title, andMessage: "What do you want to do?")
         
         alert.action(with: task) { newValue, note in
-            if let task = task, let completion = completion {                StorageManager.shared.edit(task, newValue: newValue, newNote: note)
+            if let task = task, let completion = completion {
+                self.storageManager.edit(task, newValue: newValue, newNote: note)
                 completion()
             } else {
                 self.saveTask(withName: newValue, andNote: note)
@@ -117,7 +119,7 @@ extension TasksViewController {
     
     private func saveTask(withName name: String, andNote note: String) {
         let task = Task(value: [name, note])
-        StorageManager.shared.save(task, to: taskList)
+        storageManager.save(task, to: taskList)
         let rowIndex = IndexPath(row: currentTasks.index(of: task) ?? 0, section: 0)
         tableView.insertRows(at: [rowIndex], with: .automatic)
     }
